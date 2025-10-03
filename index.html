@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Still Come True — Reader</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f9f3ee;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .viewer {
+      width: 100%;
+      height: 100%;
+      background: #f9f3ee;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .spread {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0px; 
+      height: 100vh;
+    }
+    .page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .page img {
+      height: 100vh;       
+      width: auto;     
+      object-fit: contain;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    @media (max-width: 900px) {
+      .page.left { display: none; }
+      .page.right { flex: none; }
+    }
+
+    /* Nút quay lại đầu */
+    #restartBtn {
+      position: absolute;
+      bottom: 50px;
+      right: 50px;
+      padding: 20px 36px;
+      font-size: 72px;
+      border: none;
+      border-radius: 15px;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+      display: none;
+      opacity: 0.8;
+    }
+    #restartBtn:hover {
+      opacity: 1;
+      scale:1.1;
+      background: #555;
+    }
+
+.page.right {
+  position: relative; /* để overlay bám vào vùng trang phải */
+}
+
+/* Overlay cảnh báo (chỉ cho trang 0) */
+#warningOverlay {
+  position: absolute;
+  top: 50; left: 0; right: 0; bottom: 50;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+background: rgba(0,0,0,0.8);
+  color: #ffffff;
+  font-size: 250px;
+  font-weight: bold;
+display: none;
+}
+
+  </style>
+</head>
+<body>
+  <div class="viewer" id="viewer">
+ <div class="spread">
+  <div class="page left"><img id="leftImg" alt=""></div>
+  <div class="page right">
+    <img id="rightImg" alt="">
+    <div id="warningOverlay">
+      Đây là trang nhái SMA<br>Chỉ sử dụng với<br>mục đích tham khảo.
+    </div>
+  </div>
+</div>
+    <button id="restartBtn">⟲ Quay về đầu</button>
+  </div>
+
+  <script>
+  const total = 17; // tổng số trang jpg (1..17)
+  let current = 0;  // bắt đầu với cặp (1-0)
+
+  const leftImg = document.getElementById('leftImg');
+  const rightImg = document.getElementById('rightImg');
+  const viewer = document.getElementById('viewer');
+  const restartBtn = document.getElementById('restartBtn');
+  const warningOverlay = document.getElementById('warningOverlay');
+
+  function imgPath(n) {
+    return "Page." + String(n).padStart(2,"0") + ".jpg";
+  }
+
+  function showPage() {
+    const left = current + 1; // trang lẻ (trái)
+    const right = current;    // trang chẵn (phải)
+
+    leftImg.style.display = "block";
+    rightImg.style.display = "block";
+
+    // trang 0 đặc biệt
+    leftImg.src = left <= total ? imgPath(left) : "";
+    rightImg.src = (right === 0) 
+      ? "https://smacmag.net/img/viewer/page_start_right2left.png"
+      : (right <= total ? imgPath(right) : "");
+
+    // ⚡ Hiện overlay chỉ khi trang 0
+    if (right === 0) {
+      warningOverlay.style.display = "flex";
+    } else {
+      warningOverlay.style.display = "none";
+    }
+
+    // kiểm tra cặp cuối -> hiện nút restart
+    if (current >= (total % 2 === 0 ? total : total - 1)) {
+      restartBtn.style.display = "block";
+    } else {
+      restartBtn.style.display = "none";
+    }
+  }
+
+  function nextPage() {
+    current += 2;
+    if (current > total) {
+      current = total % 2 === 0 ? total : total - 1;
+    }
+    showPage();
+  }
+
+  function prevPage() {
+    if (current >= 2) {
+      current -= 2;
+    } else {
+      current = 0;
+    }
+    showPage();
+  }
+
+  // click: nửa trái = next, nửa phải = prev
+  viewer.addEventListener("click", (e) => {
+    if (e.target === restartBtn) return; // không đụng click nút
+    if (e.clientX < window.innerWidth / 2) {
+      nextPage();
+    } else {
+      prevPage();
+    }
+  });
+
+  // bàn phím
+  document.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight") prevPage();
+    if (e.key === "ArrowLeft") nextPage();
+  });
+
+  // nút restart
+  restartBtn.addEventListener("click", () => {
+    current = 0;
+    showPage();
+  });
+
+  showPage();
+</script>
+
+</body>
+</html>
